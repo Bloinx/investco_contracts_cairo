@@ -213,7 +213,7 @@ mod SavingBox {
             // Check if user has already made the maximum number of payments
             let total_payments_made = self.valid_payments_map.read(caller) + self.late_payments_map.read(caller);
             let number_of_payments = self.number_of_payments.read();
-            assert(total_payments_made >= number_of_payments, 'Max number of payments');
+            assert(total_payments_made < number_of_payments, 'Max number of payments');
 
             // Transfer tokens from user to contract
             let token = IERC20Dispatcher { contract_address: self.token_address.read() };
