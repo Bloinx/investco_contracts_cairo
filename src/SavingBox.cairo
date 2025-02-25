@@ -2,8 +2,14 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IERC20<TContractState> {
-    fn transferFrom(ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
+    fn transfer_from(ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
     fn transfer(ref self: TContractState, recipient: ContractAddress, amount: u256) -> bool;
+    fn approve(ref self: TContractState, spender: ContractAddress, amount: u256) -> bool;
+}
+
+#[starknet::interface]
+trait IVesu<TContractState> {
+    fn deposit(ref self: TContractState, assets: u256, receiver: ContractAddress) -> u256;
 }
 
 #[starknet::interface]
@@ -29,11 +35,15 @@ pub trait ISavingBox<T> {
     fn get_total_fees_collected(self: @T) -> u256;
 
     fn get_token_address(self: @T) -> ContractAddress;
+    fn get_vesu_address(self: @T) -> ContractAddress;
+    
+    // Donation function
+    fn donate(ref self: T, amount: u256);
 }
 
 #[starknet::contract]
 mod SavingBox {
-    use super::{ISavingBox, IERC20Dispatcher, IERC20DispatcherTrait};
+    use super::{ISavingBox, IERC20Dispatcher, IERC20DispatcherTrait, IVesuDispatcher, IVesuDispatcherTrait};
     use core::array::ArrayTrait;
     use starknet::contract_address::ContractAddress;
     use starknet::storage::{Map, StorageMapReadAccess, StorageMapWriteAccess};
@@ -56,6 +66,7 @@ mod SavingBox {
         user_list: Map<u32, ContractAddress>,
         has_withdrawn: Map<ContractAddress, bool>,  //Track if user has withdrawn
         token_address: ContractAddress,
+        vesu_address: ContractAddress,  // Address of the VESU protocol
     }
 
     #[constructor]
@@ -66,6 +77,7 @@ mod SavingBox {
         payment_interval: u64,
         withdraw_fee: u64,
         token_address: ContractAddress,
+        vesu_address: ContractAddress,
     ) {
         assert(withdraw_fee <= 50, 'Fee must be <= 50%');
         self.save_amount.write(save_amount);
@@ -77,6 +89,7 @@ mod SavingBox {
         self.total_fees_collected.write(0);
         self.user_count.write(0);
         self.token_address.write(token_address);
+        self.vesu_address.write(vesu_address);
     }
 
     #[abi(embed_v0)]
@@ -111,6 +124,10 @@ mod SavingBox {
 
         fn get_token_address(self: @ContractState) -> ContractAddress {
             self.token_address.read()
+        }
+
+        fn get_vesu_address(self: @ContractState) -> ContractAddress {
+            self.vesu_address.read()
         }
 
         fn get_user_data(self: @ContractState, user_address: ContractAddress) -> (u256, u64, u64, bool) {
@@ -218,7 +235,7 @@ mod SavingBox {
             // Transfer tokens from user to contract
             let token = IERC20Dispatcher { contract_address: self.token_address.read() };
             assert(
-                token.transferFrom(caller, starknet::get_contract_address(), save_amount),
+                token.transfer_from(caller, starknet::get_contract_address(), save_amount),
                 'Token transfer failed'
             );
 
@@ -235,6 +252,23 @@ mod SavingBox {
                 let current_late = self.late_payments_map.read(caller);
                 self.late_payments_map.write(caller, current_late + 1);
             }
+            
+            // Deposit to VESU protocol to earn interest
+            let vesu_address = self.vesu_address.read();
+            let contract_address = starknet::get_contract_address();
+            
+            // Approve VESU contract to spend tokens
+            assert(
+                token.approve(vesu_address, save_amount),
+                'Approval failed'
+            );
+            
+            // Deposit assets into VESU protocol
+            let vesu = IVesuDispatcher { contract_address: vesu_address };
+            let shares = vesu.deposit(save_amount, contract_address);
+            
+            // We don't need to do anything with the returned shares as we're just tracking
+            // the total value in our contract storage
         }
 
         fn early_withdraw(ref self: ContractState, num_payments: u64) {
@@ -324,6 +358,37 @@ mod SavingBox {
                 token.transfer(caller, total_amount),
                 'Token transfer failed'
             );
+        }
+
+        fn donate(ref self: ContractState, amount: u256) {
+            let caller = get_caller_address();
+            assert(amount > 0, 'Amount must be positive');
+            
+            // Transfer tokens from donor to contract
+            let token = IERC20Dispatcher { contract_address: self.token_address.read() };
+            assert(
+                token.transfer_from(caller, starknet::get_contract_address(), amount),
+                'Token transfer failed'
+            );
+            
+            // Increase total fees collected which will be distributed to users later
+            self.total_fees_collected.write(self.total_fees_collected.read() + amount);
+            
+            // Deposit to VESU protocol to earn interest
+            let vesu_address = self.vesu_address.read();
+            let contract_address = starknet::get_contract_address();
+            
+            // Approve VESU contract to spend tokens
+            assert(
+                token.approve(vesu_address, amount),
+                'Approval failed'
+            );
+            
+            // Deposit donated assets into VESU protocol
+            let vesu = IVesuDispatcher { contract_address: vesu_address };
+            let shares = vesu.deposit(amount, contract_address);
+            
+            // The shares are automatically added to the contract's balance in Vesu protocol
         }
     }
 }
