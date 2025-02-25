@@ -2,6 +2,7 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IERC20<TContractState> {
+    // camelCase functions
     fn getName(self: @TContractState) -> felt252;
     fn getSymbol(self: @TContractState) -> felt252;
     fn getDecimals(self: @TContractState) -> u8;
@@ -14,6 +15,16 @@ trait IERC20<TContractState> {
     fn increaseAllowance(ref self: TContractState, spender: ContractAddress, added_value: u256);
     fn decreaseAllowance(ref self: TContractState, spender: ContractAddress, subtracted_value: u256);
     fn mint(ref self: TContractState, recipient: ContractAddress, amount: u256);
+    
+    // snake_case functions
+    fn get_name(self: @TContractState) -> felt252;
+    fn get_symbol(self: @TContractState) -> felt252;
+    fn get_decimals(self: @TContractState) -> u8;
+    fn get_total_supply(self: @TContractState) -> u256;
+    fn balance_of(self: @TContractState, account: ContractAddress) -> u256;
+    fn transfer_from(ref self: TContractState, sender: ContractAddress, recipient: ContractAddress, amount: u256) -> bool;
+    fn increase_allowance(ref self: TContractState, spender: ContractAddress, added_value: u256);
+    fn decrease_allowance(ref self: TContractState, spender: ContractAddress, subtracted_value: u256);
 }
 
 #[starknet::contract]
@@ -66,6 +77,7 @@ mod ERC20 {
 
     #[abi(embed_v0)]
     impl IERC20Impl of super::IERC20<ContractState> {
+        // camelCase implementations
         fn getName(self: @ContractState) -> felt252 {
             self.name.read()
         }
@@ -144,6 +156,44 @@ mod ERC20 {
                     }
                 )
             );
+        }
+        
+        // snake_case implementations
+        fn get_name(self: @ContractState) -> felt252 {
+            self.getName()
+        }
+
+        fn get_symbol(self: @ContractState) -> felt252 {
+            self.getSymbol()
+        }
+
+        fn get_decimals(self: @ContractState) -> u8 {
+            self.getDecimals()
+        }
+
+        fn get_total_supply(self: @ContractState) -> u256 {
+            self.getTotalSupply()
+        }
+
+        fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
+            self.balanceOf(account)
+        }
+
+        fn transfer_from(
+            ref self: ContractState,
+            sender: ContractAddress,
+            recipient: ContractAddress,
+            amount: u256
+        ) -> bool {
+            self.transferFrom(sender, recipient, amount)
+        }
+
+        fn increase_allowance(ref self: ContractState, spender: ContractAddress, added_value: u256) {
+            self.increaseAllowance(spender, added_value)
+        }
+
+        fn decrease_allowance(ref self: ContractState, spender: ContractAddress, subtracted_value: u256) {
+            self.decreaseAllowance(spender, subtracted_value)
         }
     }
 

@@ -231,6 +231,33 @@ export const SavingBox = [
                 }
              ],
              "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"get_vesu_address",
+             "inputs":[
+                
+             ],
+             "outputs":[
+                {
+                   "type":"core::starknet::contract_address::ContractAddress"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"donate",
+             "inputs":[
+                {
+                   "name":"amount",
+                   "type":"core::integer::u256"
+                }
+             ],
+             "outputs":[
+                
+             ],
+             "state_mutability":"external"
           }
        ]
     },
@@ -256,6 +283,10 @@ export const SavingBox = [
           },
           {
              "name":"token_address",
+             "type":"core::starknet::contract_address::ContractAddress"
+          },
+          {
+             "name":"vesu_address",
              "type":"core::starknet::contract_address::ContractAddress"
           }
        ]

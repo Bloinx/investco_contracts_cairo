@@ -241,6 +241,134 @@ export const ERC20 = [
                 
              ],
              "state_mutability":"external"
+          },
+          {
+             "type":"function",
+             "name":"get_name",
+             "inputs":[
+                
+             ],
+             "outputs":[
+                {
+                   "type":"core::felt252"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"get_symbol",
+             "inputs":[
+                
+             ],
+             "outputs":[
+                {
+                   "type":"core::felt252"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"get_decimals",
+             "inputs":[
+                
+             ],
+             "outputs":[
+                {
+                   "type":"core::integer::u8"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"get_total_supply",
+             "inputs":[
+                
+             ],
+             "outputs":[
+                {
+                   "type":"core::integer::u256"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"balance_of",
+             "inputs":[
+                {
+                   "name":"account",
+                   "type":"core::starknet::contract_address::ContractAddress"
+                }
+             ],
+             "outputs":[
+                {
+                   "type":"core::integer::u256"
+                }
+             ],
+             "state_mutability":"view"
+          },
+          {
+             "type":"function",
+             "name":"transfer_from",
+             "inputs":[
+                {
+                   "name":"sender",
+                   "type":"core::starknet::contract_address::ContractAddress"
+                },
+                {
+                   "name":"recipient",
+                   "type":"core::starknet::contract_address::ContractAddress"
+                },
+                {
+                   "name":"amount",
+                   "type":"core::integer::u256"
+                }
+             ],
+             "outputs":[
+                {
+                   "type":"core::bool"
+                }
+             ],
+             "state_mutability":"external"
+          },
+          {
+             "type":"function",
+             "name":"increase_allowance",
+             "inputs":[
+                {
+                   "name":"spender",
+                   "type":"core::starknet::contract_address::ContractAddress"
+                },
+                {
+                   "name":"added_value",
+                   "type":"core::integer::u256"
+                }
+             ],
+             "outputs":[
+                
+             ],
+             "state_mutability":"external"
+          },
+          {
+             "type":"function",
+             "name":"decrease_allowance",
+             "inputs":[
+                {
+                   "name":"spender",
+                   "type":"core::starknet::contract_address::ContractAddress"
+                },
+                {
+                   "name":"subtracted_value",
+                   "type":"core::integer::u256"
+                }
+             ],
+             "outputs":[
+                
+             ],
+             "state_mutability":"external"
           }
        ]
     },
